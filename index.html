@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Digital Comm Simulator</title>
+
+    <meta name="description"
+        content="P2P Digital Communication Simulator - A visual tool for understanding BPSK, QPSK, QAM modulation and error detection protocols.">
+    <meta property="og:title" content="P2P Digital Comm Simulator">
+    <meta property="og:description"
+        content="Simulate and visualize digital communication pipelines directly in your browser.">
+
+    <!-- PyScript 2024.8.2 - Using correct module loading -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.8.2/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.8.2/core.js"></script>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg: #0a0e17;
+            --panel: #0f1525;
+            --border: #2a3441;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --accent: #f59e0b;
+            --success: #10b981;
+            --error: #ef4444;
+            --text: #e2e8f0;
+            --tx-color: #60a5fa;
+            --rx-color: #4ade80;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tag {
+            font-size: 0.7rem;
+            background: var(--primary);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr 420px;
+            gap: 25px;
+            height: calc(100vh - 120px);
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+                grid-template-rows: auto auto auto;
+            }
+
+            .pipeline-track {
+                overflow-x: auto;
+            }
+
+            .node-container {
+                min-width: 600px;
+            }
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-title {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin: 0 0 20px 0;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            display: block;
+            font-weight: 600;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: rgba(10, 14, 23, 0.8);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .btn-start {
+            width: 100%;
+            background: linear-gradient(135deg, var(--success), #10b981);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* ========================================
+           ENHANCED PIPELINE VISUALIZATION
+           All 6 Visual Effects Combined
+        ======================================== */
+
+        /* Option 6: 3D Perspective Container */
+        .pipeline-track {
+            position: relative;
+            height: 260px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
+            border-radius: 16px;
+            margin: 20px 0;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            overflow: hidden;
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .pipeline-track::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        /* Connector line - hidden */
+        .connector-line {
+            display: none;
+        }
+
+        @keyframes dash-flow {
+            0% {
+                stroke-dashoffset: 0;
+            }
+
+            100% {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        /* Animated fill that glows */
+        .connector-fill {
+            position: absolute;
+            top: 50%;
+            left: 60px;
+            height: 4px;
+            width: 0%;
+            background: linear-gradient(90deg,
+                    var(--primary) 0%,
+                    var(--success) 50%,
+                    var(--accent) 100%);
+            transform: translateY(-50%);
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 2px;
+            box-shadow:
+                0 0 10px var(--primary-glow),
+                0 0 30px var(--primary-glow);
+        }
+
+        /* Option 1: Animated Data Packets */
+        .data-packet {
+            position: absolute;
+            top: 50%;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+            animation: packet-glow 0.5s ease-in-out infinite alternate;
+        }
+
+        .data-packet::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: inherit;
+            filter: blur(8px);
+            opacity: 0.6;
+        }
+
+        .data-packet.packet-blue {
+            background: radial-gradient(circle, #60a5fa, #3b82f6);
+            box-shadow: 0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.5);
+        }
+
+        .data-packet.packet-green {
+            background: radial-gradient(circle, #4ade80, #10b981);
+            box-shadow: 0 0 20px #10b981, 0 0 40px rgba(16, 185, 129, 0.5);
+        }
+
+        .data-packet.packet-gold {
+            background: radial-gradient(circle, #fbbf24, #f59e0b);
+            box-shadow: 0 0 20px #f59e0b, 0 0 40px rgba(245, 158, 11, 0.5);
+        }
+
+        @keyframes packet-glow {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        }
+
+        @keyframes packet-move {
+            0% {
+                left: 60px;
+            }
+
+            100% {
+                left: calc(100% - 60px);
+            }
+        }
+
+        /* Option 5: Particle Trail Effect */
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 5;
+        }
+
+        @keyframes particle-float {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: translate(calc(-50% + 10px), calc(-50% - 20px)) scale(0.8);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(calc(-50% + 20px), calc(-50% - 40px)) scale(0.2);
+            }
+        }
+
+        @keyframes particle-explode {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0);
+            }
+        }
+
+        /* Diagonal Staircase Layout for Nodes */
+        .node-container {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .node {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(145deg, #1a2744, #0d1424);
+            border: 3px solid rgba(100, 116, 139, 0.5);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 2;
+            font-size: 1.2rem;
+            box-shadow:
+                0 4px 20px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        /* Zigzag Layout - alternating up and down */
+        .node:nth-child(odd) {
+            transform: translateY(-40px);
+        }
+
+        .node:nth-child(even) {
+            transform: translateY(40px);
+        }
+
+        /* First and last nodes are highlighted (filled like A and B) */
+        .node:first-child,
+        .node:last-child {
+            background: linear-gradient(145deg, #1e4a6f, #0f2d4a);
+            border-color: var(--primary);
+            box-shadow:
+                0 0 25px rgba(59, 130, 246, 0.4),
+                0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .node>div {
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-top: 2px;
+            color: #94a3b8;
+        }
+
+        /* Node icon images */
+        .node-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            transition: all 0.3s ease;
+            filter: brightness(1.1);
+        }
+
+        .node.active .node-icon {
+            filter: brightness(1.3) drop-shadow(0 0 10px rgba(59, 130, 246, 0.6));
+            transform: scale(1.1);
+        }
+
+        .node.success .node-icon {
+            filter: brightness(1.3) drop-shadow(0 0 10px rgba(16, 185, 129, 0.6));
+        }
+
+        /* Pulsing ripple on activation - for circular nodes */
+        .node::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .node.active {
+            border-color: var(--primary);
+            background: linear-gradient(145deg, #1e4a6f, #0f2d4a);
+            box-shadow:
+                0 0 40px var(--primary-glow),
+                0 10px 40px rgba(59, 130, 246, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: node-pulse 0.6s ease-out;
+        }
+
+        /* Active states for diagonal staircase positions */
+        .node.active:nth-child(odd) {
+            transform: translateY(-45px) scale(1.15);
+        }
+
+        .node.active:nth-child(even) {
+            transform: translateY(35px) scale(1.15);
+        }
+
+        .node.active::before {
+            border-color: var(--primary);
+            animation: ripple-out 0.8s ease-out;
+        }
+
+        @keyframes node-pulse {
+            0% {
+                box-shadow: 0 0 0 rgba(59, 130, 246, 0.8);
+            }
+
+            50% {
+                box-shadow: 0 0 60px rgba(59, 130, 246, 0.6);
+            }
+
+            100% {
+                box-shadow: 0 0 40px var(--primary-glow);
+            }
+        }
+
+        @keyframes ripple-out {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Sequential light-up effect */
+        .node.processing::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+            animation: processing-bar 0.6s ease-in-out infinite;
+        }
+
+        @keyframes processing-bar {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                width: 30px;
+            }
+
+            50% {
+                opacity: 1;
+                width: 50px;
+            }
+        }
+
+        /* Success state */
+        .node.success {
+            border-color: var(--success) !important;
+            box-shadow:
+                0 0 30px rgba(16, 185, 129, 0.4),
+                0 10px 40px rgba(16, 185, 129, 0.2) !important;
+        }
+
+        .node.success::before {
+            border-color: var(--success);
+        }
+
+        /* SVG Connection Path for diagonal lines between zigzag nodes */
+        .svg-connections {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .connection-path {
+            fill: none;
+            stroke: rgba(59, 130, 246, 0.5);
+            stroke-width: 0.8;
+            stroke-linecap: round;
+            stroke-dasharray: 4 2;
+            animation: dash-animation 1.5s linear infinite;
+            filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.3));
+        }
+
+        .connection-path.active {
+            stroke: var(--primary);
+            stroke-width: 1.2;
+            stroke-dasharray: none;
+            filter: drop-shadow(0 0 8px var(--primary));
+            animation: none;
+        }
+
+        .connection-path.success {
+            stroke: var(--success);
+            stroke-width: 1.2;
+            stroke-dasharray: none;
+            filter: drop-shadow(0 0 8px var(--success));
+            animation: none;
+        }
+
+        @keyframes dash-animation {
+            0% {
+                stroke-dashoffset: 24;
+            }
+
+            100% {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        /* Electricity flow effect */
+        .electricity {
+            position: absolute;
+            top: 50%;
+            height: 2px;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    var(--primary) 20%,
+                    #fff 50%,
+                    var(--primary) 80%,
+                    transparent 100%);
+            transform: translateY(-50%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 8;
+        }
+
+        @keyframes electricity-flow {
+            0% {
+                left: 60px;
+                width: 0;
+                opacity: 0;
+            }
+
+            10% {
+                width: 80px;
+                opacity: 1;
+            }
+
+            90% {
+                width: 80px;
+                opacity: 1;
+            }
+
+            100% {
+                left: calc(100% - 60px);
+                width: 0;
+                opacity: 0;
+            }
+        }
+
+        .log-feed {
+            flex: 1;
+            background: rgba(10, 14, 23, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .log-feed::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-feed::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        .log-feed::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .log-entry {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border-left: 3px solid;
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 8px;
+            animation: log-slide-in 0.3s ease-out;
+        }
+
+        @keyframes log-slide-in {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .log-tx {
+            border-color: var(--tx-color);
+            color: #bfdbfe;
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        .log-rx {
+            border-color: var(--rx-color);
+            color: #bbf7d0;
+            background: rgba(74, 222, 128, 0.08);
+        }
+
+        .log-err {
+            border-color: var(--error);
+            color: #fecaca;
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 5px;
+            text-shadow: 0 0 20px currentColor;
+        }
+
+        /* Button enhancement */
+        .btn-start {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-start::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg,
+                    transparent 30%,
+                    rgba(255, 255, 255, 0.1) 50%,
+                    transparent 70%);
+            transform: rotate(45deg) translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .btn-start:hover::before {
+            transform: rotate(45deg) translateX(100%);
+        }
+
+        .btn-start:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>P2P DIGITAL COMMUNICATION SYSTEM(B.SC SEM-V PROJECT) <span class="tag">v10.0</span></h1>
+        </div>
+        <div style="color: var(--success); font-family: 'JetBrains Mono';">● SYSTEM ONLINE</div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+
+        <!-- Left Panel - Controls -->
+        <div class="panel">
+            <h2 class="panel-title">Transmission Config</h2>
+
+            <div class="control-group">
+                <label>PAYLOAD MESSAGE</label>
+                <input type="text" id="message" value="Hello World!" aria-label="Payload Message">
+            </div>
+
+            <div class="control-group">
+                <label>MODULATION SCHEME</label>
+                <select id="modulation" aria-label="Modulation Scheme">
+                    <option value="BPSK">BPSK (1 bit/symbol)</option>
+                    <option value="QPSK" selected>QPSK (2 bits/symbol)</option>
+                    <option value="16QAM">16-QAM (4 bits/symbol)</option>
+                    <option value="64QAM">64-QAM (6 bits/symbol)</option>
+                    <option value="256QAM">256-QAM (8 bits/symbol)</option>
+                    <option value="1024QAM">1024-QAM (10 bits/symbol)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>CHANNEL NOISE (SNR: <span id="snr-val">25</span> dB)</label>
+                <input type="range" id="snr" min="0" max="50" value="25" step="0.5" aria-label="Signal to Noise Ratio">
+            </div>
+
+            <div class="control-group">
+                <label>ERROR DETECTION</label>
+                <select id="error-detection" aria-label="Error Detection Protocol">
+                    <option value="CRC16">CRC-16</option>
+                    <option value="CRC32" selected>CRC-32</option>
+                    <option value="PARITY">Parity Bit</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>FRAMING PROTOCOL</label>
+                <select id="framing" aria-label="Framing Protocol">
+                    <option value="FLAG">HDLC Flag (0x7E)</option>
+                    <option value="LENGTH" selected>Length Header</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>ARQ PROTOCOL</label>
+                <select id="arq-protocol" aria-label="ARQ Protocol">
+                    <option value="STOP_WAIT">Stop-and-Wait</option>
+                    <option value="SELECTIVE_REPEAT" selected>Selective Repeat</option>
+                </select>
+            </div>
+
+            <button class="btn-start" id="start-btn" aria-label="Start Transmission">
+                <i class="fas fa-play"></i> START TRANSMISSION
+            </button>
+        </div>
+
+        <!-- Center Panel - Visualization -->
+        <div class="panel">
+            <h2 class="panel-title">Communication Pipeline</h2>
+
+            <div style="flex: 1; display: flex; flex-direction: column;">
+                <div class="pipeline-track" id="pipeline-track">
+                    <!-- Simple connector line -->
+                    <div class="connector-line"></div>
+                    <!-- Container for data packets and particles -->
+                    <div id="effects-container"></div>
+
+                    <div class="node-container">
+                        <div class="node" id="n-app">
+                            <img src="images/app.png" alt="Application" class="node-icon">
+                            <div>APP</div>
+                        </div>
+                        <div class="node" id="n-enc">
+                            <img src="images/enc.png" alt="Encoding" class="node-icon">
+                            <div>ENC</div>
+                        </div>
+                        <div class="node" id="n-mod">
+                            <img src="images/mod.png" alt="Modulation" class="node-icon">
+                            <div>MOD</div>
+                        </div>
+                        <div class="node" id="n-chan">
+                            <img src="images/chan.png" alt="Channel" class="node-icon">
+                            <div>CHAN</div>
+                        </div>
+                        <div class="node" id="n-dem">
+                            <img src="images/dem.png" alt="Demodulation" class="node-icon">
+                            <div>DEM</div>
+                        </div>
+                        <div class="node" id="n-dec">
+                            <img src="images/dec.png" alt="Decoding" class="node-icon">
+                            <div>DEC</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="background: rgba(10, 14, 23, 0.8); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: auto;">
+                    <div style="color: var(--primary); margin-bottom: 10px; font-weight: 600;">SYSTEM STATUS</div>
+                    <div id="pipeline-status">Ready for transmission. Click START.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Logs -->
+        <div class="panel">
+            <h2 class="panel-title">System Logs & Statistics</h2>
+
+            <div class="log-feed" id="feed">
+                <div
+                    style="color: white; font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 10px;">
+                    SYSTEM INITIALIZATION</div>
+                <div class="log-entry log-tx">Loading PyScript runtime...</div>
+            </div>
+
+            <div class="stats-grid">
+                <div style="text-align: center;">
+                    <div class="stat-value" id="s-sent" style="color:var(--tx-color)">0</div>
+                    <div style="font-size: 0.7rem; color: #94a3b8;">SENT</div>
+                </div>
+                <div style="text-align: center;">
+                    <div class="stat-value" id="s-recv" style="color:var(--rx-color)">0</div>
+                    <div style="font-size: 0.7rem; color: #94a3b8;">RECV</div>
+                </div>
+                <div style="text-align: center;">
+                    <div class="stat-value" id="s-err" style="color:var(--accent)">0</div>
+                    <div style="font-size: 0.7rem; color: #94a3b8;">ERRORS</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- PyScript Config using JSON -->
+    <script type="py" config='{"packages": ["numpy"]}'>
+import struct
+import asyncio
+import time
+import numpy as np
+from js import document, console
+from pyodide.ffi import create_proxy
+
+# Global statistics
+STATS = {
+    'sent': 0,
+    'recv': 0,
+    'err': 0,
+    'window_size': 4,
+    'sequence_number': 0
+}
+
+# UI Helper Functions
+def log(msg, log_type="tx"):
+    feed = document.getElementById("feed")
+    if not feed: return
+    entry = document.createElement("div")
+    entry.className = f"log-entry log-{log_type}"
+    entry.innerText = msg
+    feed.appendChild(entry)
+    
+    # Memory optimization: Limit log entries
+    while feed.childElementCount > 100:
+        feed.removeChild(feed.firstChild)
+        
+    feed.scrollTop = feed.scrollHeight
+
+def set_status(msg):
+    elm = document.getElementById("pipeline-status")
+    if elm:
+        elm.innerText = msg
+
+def update_stats():
+    elm_sent = document.getElementById("s-sent")
+    elm_recv = document.getElementById("s-recv")
+    elm_err = document.getElementById("s-err")
+    
+    if elm_sent: elm_sent.innerText = str(STATS['sent'])
+    if elm_recv: elm_recv.innerText = str(STATS['recv'])
+    if elm_err: elm_err.innerText = str(STATS['err'])
+
+def reset_nodes():
+    for node_id in ["n-app", "n-enc", "n-mod", "n-chan", "n-dem", "n-dec"]:
+        node = document.getElementById(node_id)
+        if node:
+            node.classList.remove("active")
+            node.classList.remove("processing")
+            node.classList.remove("success")
+            node.style.borderColor = ""
+            node.style.boxShadow = ""
+    
+    # Reset SVG connection paths
+    for i in range(1, 6):
+        path = document.getElementById(f"path-{i}")
+        if path:
+            path.classList.remove("active")
+            path.classList.remove("success")
+    
+    # Clear any existing effects
+    effects_container = document.getElementById("effects-container")
+    if effects_container:
+        effects_container.innerHTML = ""
+
+def create_data_packet(progress, color_class="packet-blue"):
+    """Create an animated data packet at the specified progress position"""
+    pipeline_track = document.getElementById("pipeline-track")
+    if not pipeline_track:
+        return None
+    
+    packet = document.createElement("div")
+    packet.className = f"data-packet {color_class}"
+    
+    # Calculate position based on progress (0-100)
+    # Pipeline content area is from 60px to (width - 60px)
+    left_pos = 60 + (progress / 100) * (pipeline_track.offsetWidth - 120)
+    packet.style.left = f"{left_pos}px"
+    
+    effects_container = document.getElementById("effects-container")
+    if effects_container:
+        effects_container.appendChild(packet)
+    
+    return packet
+
+def create_particles(progress, count=5, color="#3b82f6"):
+    """Create particle explosion effect at the specified position"""
+    pipeline_track = document.getElementById("pipeline-track")
+    effects_container = document.getElementById("effects-container")
+    if not pipeline_track or not effects_container:
+        return
+    
+    left_pos = 60 + (progress / 100) * (pipeline_track.offsetWidth - 120)
+    
+    for i in range(count):
+        particle = document.createElement("div")
+        particle.className = "particle"
+        particle.style.left = f"{left_pos}px"
+        particle.style.top = "50%"
+        particle.style.background = color
+        particle.style.boxShadow = f"0 0 10px {color}"
+        
+        # Random direction for explosion
+        import random
+        tx = random.randint(-40, 40)
+        ty = random.randint(-40, 40)
+        particle.style.setProperty("--tx", f"{tx}px")
+        particle.style.setProperty("--ty", f"{ty}px")
+        particle.style.animation = "particle-explode 0.8s ease-out forwards"
+        
+        effects_container.appendChild(particle)
+        
+    # Clean up particles after animation
+    async def cleanup():
+        await asyncio.sleep(1)
+        # Only remove particles that have finished animating
+        particles = effects_container.querySelectorAll(".particle")
+        for p in particles:
+            if p.parentNode:
+                p.parentNode.removeChild(p)
+    
+    asyncio.ensure_future(cleanup())
+
+def get_packet_color(node_index):
+    """Get packet color based on which stage of the pipeline"""
+    if node_index <= 1:  # APP, ENC
+        return "packet-blue"
+    elif node_index <= 3:  # MOD, CHAN
+        return "packet-green"
+    else:  # DEM, DEC
+        return "packet-gold"
+
+async def activate_node(node_id, progress):
+    # Get node index for color determination
+    node_ids = ["n-app", "n-enc", "n-mod", "n-chan", "n-dem", "n-dec"]
+    node_index = node_ids.index(node_id) if node_id in node_ids else 0
+    
+    # Remove active from previous nodes, add processing to current
+    for i, nid in enumerate(node_ids):
+        node = document.getElementById(nid)
+        if node:
+            if i < node_index:
+                node.classList.remove("active")
+                node.classList.remove("processing")
+            elif i == node_index:
+                node.classList.add("active")
+                node.classList.add("processing")
+    
+    # Create data packet with appropriate color
+    packet_color = get_packet_color(node_index)
+    create_data_packet(progress, packet_color)
+    
+    # Create particle effect at node position
+    colors = ["#3b82f6", "#3b82f6", "#10b981", "#10b981", "#f59e0b", "#f59e0b"]
+    create_particles(progress, count=8, color=colors[node_index])
+        
+    await asyncio.sleep(0.4)
+
+# Error Detection Classes
+class ErrorDetection:
+    @staticmethod
+    def calculate_parity(data):
+        parity = 0
+        for byte in data:
+            parity ^= byte
+        return parity & 0xFF
+    
+    @staticmethod
+    def calculate_crc16(data):
+        crc = 0xFFFF
+        poly = 0x1021
+        for byte in data:
+            crc ^= (byte << 8)
+            for _ in range(8):
+                if crc & 0x8000:
+                    crc = (crc << 1) ^ poly
+                else:
+                    crc = crc << 1
+                crc &= 0xFFFF
+        return crc
+    
+    @staticmethod
+    def calculate_crc32(data):
+        crc = 0xFFFFFFFF
+        poly = 0xEDB88320
+        for byte in data:
+            crc ^= byte
+            for _ in range(8):
+                if crc & 1:
+                    crc = (crc >> 1) ^ poly
+                else:
+                    crc >>= 1
+        return crc ^ 0xFFFFFFFF
+
+# Framing Classes
+class FlagFramer:
+    FLAG = 0x7E
+    ESCAPE = 0x7D
+    XOR = 0x20
+    
+    def frame(self, data):
+        framed = bytearray()
+        framed.append(self.FLAG)
+        for byte in data:
+            if byte == self.FLAG or byte == self.ESCAPE:
+                framed.append(self.ESCAPE)
+                framed.append(byte ^ self.XOR)
+            else:
+                framed.append(byte)
+        framed.append(self.FLAG)
+        return bytes(framed)
+    
+    def deframe(self, framed_data):
+        if len(framed_data) < 2 or framed_data[0] != self.FLAG or framed_data[-1] != self.FLAG:
+            return None
+        data = framed_data[1:-1]
+        deframed = bytearray()
+        i = 0
+        while i < len(data):
+            if data[i] == self.ESCAPE and i + 1 < len(data):
+                deframed.append(data[i + 1] ^ self.XOR)
+                i += 2
+            else:
+                deframed.append(data[i])
+                i += 1
+        return bytes(deframed)
+
+class LengthFramer:
+    def frame(self, data):
+        length = len(data)
+        framed = bytearray()
+        framed.extend(struct.pack('>H', length))
+        framed.extend(data)
+        return bytes(framed)
+    
+    def deframe(self, framed_data):
+        if len(framed_data) < 2:
+            return None
+        length = struct.unpack('>H', framed_data[:2])[0]
+        if len(framed_data) < 2 + length:
+            return None
+        return framed_data[2:2 + length]
+
+# Modulator
+class Modulator:
+    SCHEMES = {
+        'BPSK': 1,
+        'QPSK': 2,
+        '16QAM': 4,
+        '64QAM': 6,
+        '256QAM': 8,
+        '1024QAM': 10
+    }
+    
+    @staticmethod
+    def get_constellation(scheme):
+        if scheme == 'BPSK':
+            return np.array([1+0j, -1+0j])
+        elif scheme == 'QPSK':
+            return np.array([1+1j, -1+1j, -1-1j, 1-1j]) / np.sqrt(2)
+        elif scheme == '16QAM':
+            points = []
+            for i in range(-3, 4, 2):
+                for q in range(-3, 4, 2):
+                    points.append(complex(i, q))
+            return np.array(points) / np.sqrt(10)
+        elif scheme == '64QAM':
+            points = []
+            for i in range(-7, 8, 2):
+                for q in range(-7, 8, 2):
+                    points.append(complex(i, q))
+            return np.array(points) / np.sqrt(42)
+        elif scheme == '256QAM':
+            points = []
+            for i in range(-15, 16, 2):
+                for q in range(-15, 16, 2):
+                    points.append(complex(i, q))
+            return np.array(points) / np.sqrt(170)
+        else:  # 1024QAM
+            points = []
+            for i in range(-31, 32, 2):
+                for q in range(-31, 32, 2):
+                    points.append(complex(i, q))
+            return np.array(points) / np.sqrt(682)
+    
+    @staticmethod
+    def modulate(bits, scheme):
+        bits_per_sym = Modulator.SCHEMES[scheme]
+        padding_needed = (bits_per_sym - len(bits) % bits_per_sym) % bits_per_sym
+        if padding_needed:
+            bits = np.concatenate([bits, np.zeros(padding_needed, dtype=int)])
+        
+        constellation = Modulator.get_constellation(scheme)
+        symbols = []
+        
+        for i in range(0, len(bits), bits_per_sym):
+            chunk = bits[i:i+bits_per_sym]
+            index = int(''.join(map(str, chunk)), 2)
+            if index < len(constellation):
+                symbols.append(constellation[index])
+        
+        return np.array(symbols), padding_needed
+    
+    @staticmethod
+    def demodulate(symbols, scheme, original_bit_length):
+        bits_per_sym = Modulator.SCHEMES[scheme]
+        constellation = Modulator.get_constellation(scheme)
+        
+        bits = []
+        for symbol in symbols:
+            distances = np.abs(constellation - symbol)
+            index = np.argmin(distances)
+            sym_bits = [int(b) for b in format(index, f'0{bits_per_sym}b')]
+            bits.extend(sym_bits)
+        
+        return np.array(bits[:original_bit_length], dtype=int)
+
+# Channel
+class Channel:
+    @staticmethod
+    def add_awgn(signal, snr_db):
+        if len(signal) == 0:
+            return signal, 0
+        
+        signal_power = np.mean(np.abs(signal) ** 2)
+        if signal_power == 0:
+            signal_power = 1e-10
+        
+        snr_linear = 10 ** (snr_db / 10)
+        noise_power = signal_power / snr_linear
+        
+        noise_real = np.random.randn(len(signal)) * np.sqrt(noise_power / 2)
+        noise_imag = np.random.randn(len(signal)) * np.sqrt(noise_power / 2)
+        noise = noise_real + 1j * noise_imag
+        
+        return signal + noise, noise_power
+
+# Main Transmission Function
+async def start_transmission(e=None):
+    start_btn = document.getElementById("start-btn")
+    try:
+        reset_nodes()
+        log("=== TRANSMISSION STARTED ===", "tx")
+        
+        message_elm = document.getElementById("message")
+        message = message_elm.value if message_elm else "msg"
+        
+        if not message.strip():
+            log("Error: Message cannot be empty", "err")
+            set_status("✗ Error: Message cannot be empty")
+            return
+
+        if start_btn:
+            start_btn.disabled = True
+            start_btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> TRANSMITTING...'
+        
+        modulation_elm = document.getElementById("modulation")
+        modulation = modulation_elm.value if modulation_elm else "QPSK"
+        
+        snr_elm = document.getElementById("snr")
+        snr = float(snr_elm.value) if snr_elm else 25.0
+        
+        ed_elm = document.getElementById("error-detection")
+        error_detection_type = ed_elm.value if ed_elm else "CRC32"
+        
+        framing_elm = document.getElementById("framing")
+        framing_type = framing_elm.value if framing_elm else "LENGTH"
+        
+        arq_elm = document.getElementById("arq-protocol")
+        arq_protocol = arq_elm.value if arq_elm else "SELECTIVE_REPEAT"
+        
+        log(f"Message: {message}", "tx")
+        log(f"Config: {modulation}, SNR={snr}dB, {error_detection_type}, {framing_type}, ARQ={arq_protocol}", "tx")
+        
+        # Step 1: Application
+        await activate_node("n-app", 10)
+        set_status("1. Encoding message")
+        data_bytes = message.encode('utf-8')
+        await asyncio.sleep(0.3)
+        
+        # Step 2: Encoding
+        await activate_node("n-enc", 25)
+        set_status("2. Adding error detection")
+        
+        error_detection = ErrorDetection()
+        if error_detection_type == "PARITY":
+            parity_byte = error_detection.calculate_parity(data_bytes)
+            packet = bytearray(data_bytes)
+            packet.append(parity_byte)
+            log(f"Parity: Added 0x{parity_byte:02X}", "tx")
+        elif error_detection_type == "CRC16":
+            crc_value = error_detection.calculate_crc16(data_bytes)
+            packet = bytearray(data_bytes)
+            packet.extend(struct.pack('>H', crc_value))
+            log(f"CRC-16: Calculated 0x{crc_value:04X}", "tx")
+        else:
+            crc_value = error_detection.calculate_crc32(data_bytes)
+            packet = bytearray(data_bytes)
+            packet.extend(struct.pack('>I', crc_value))
+            log(f"CRC-32: Calculated 0x{crc_value:08X}", "tx")
+        
+        await asyncio.sleep(0.3)
+        
+        # Step 3: Framing
+        set_status("3. Applying framing")
+        framer = FlagFramer() if framing_type == "FLAG" else LengthFramer()
+        framed_data = framer.frame(packet)
+        log(f"Framing: {len(packet)} bytes → {len(framed_data)} bytes", "tx")
+        
+        # Step 4: Modulation
+        await activate_node("n-mod", 45)
+        set_status(f"4. Modulating with {modulation}")
+        
+        bits = []
+        for byte in framed_data:
+            bits.extend([(byte >> i) & 1 for i in range(7, -1, -1)])
+        bits = np.array(bits, dtype=int)
+        original_bit_length = len(bits)
+        
+        modulator = Modulator()
+        symbols, padding = modulator.modulate(bits, modulation)
+        log(f"Modulation: Generated {len(symbols)} {modulation} symbols", "tx")
+        
+        await asyncio.sleep(0.4)
+        
+        # Step 5: Channel
+        await activate_node("n-chan", 65)
+        set_status(f"5. Adding noise (SNR={snr}dB)")
+        
+        STATS['sent'] += 1
+        update_stats()
+        
+        channel = Channel()
+        noisy_symbols, noise_power = channel.add_awgn(symbols, snr)
+        log(f"Channel: Added AWGN noise (power={noise_power:.2e})", "tx")
+        
+        await asyncio.sleep(0.5)
+        
+        # Step 6: Demodulation
+        await activate_node("n-dem", 80)
+        set_status("6. Demodulating")
+        
+        demod_bits = modulator.demodulate(noisy_symbols, modulation, original_bit_length)
+        
+        rx_bytes = bytearray()
+        for i in range(0, len(demod_bits), 8):
+            if i + 8 <= len(demod_bits):
+                byte_bits = demod_bits[i:i+8]
+                byte_val = sum(int(bit) << (7-j) for j, bit in enumerate(byte_bits))
+                rx_bytes.append(byte_val)
+        
+        log(f"Demodulated {len(rx_bytes)} bytes", "rx")
+        await asyncio.sleep(0.4)
+        
+        # Step 7: Decoding
+        await activate_node("n-dec", 95)
+        set_status("7. Decoding and verification")
+        
+        deframed = framer.deframe(bytes(rx_bytes))
+        
+        if deframed is None:
+            log("Error: Framing error - could not deframe data", "err")
+            STATS['err'] += 1
+            update_stats()
+            set_status("✗ TRANSMISSION FAILED: Framing error")
+            return
+        
+        error_check_valid = False
+        decoded_data = bytearray()
+        
+        if error_detection_type == "PARITY":
+            if len(deframed) > 0:
+                data_part = deframed[:-1]
+                rx_parity = deframed[-1]
+                calculated_parity = error_detection.calculate_parity(data_part)
+                error_check_valid = (rx_parity == calculated_parity)
+                decoded_data = data_part
+                log(f"Parity check: {'✓ Valid' if error_check_valid else '✗ Failed'} (RX=0x{rx_parity:02X}, Calc=0x{calculated_parity:02X})", "rx" if error_check_valid else "err")
+        elif error_detection_type == "CRC16":
+            if len(deframed) >= 2:
+                data_part = deframed[:-2]
+                rx_crc = struct.unpack('>H', deframed[-2:])[0]
+                calculated_crc = error_detection.calculate_crc16(data_part)
+                error_check_valid = (rx_crc == calculated_crc)
+                decoded_data = data_part
+                log(f"CRC-16 check: {'✓ Valid' if error_check_valid else '✗ Failed'} (RX=0x{rx_crc:04X}, Calc=0x{calculated_crc:04X})", "rx" if error_check_valid else "err")
+        else:
+            if len(deframed) >= 4:
+                data_part = deframed[:-4]
+                rx_crc = struct.unpack('>I', deframed[-4:])[0]
+                calculated_crc = error_detection.calculate_crc32(data_part)
+                error_check_valid = (rx_crc == calculated_crc)
+                decoded_data = data_part
+                log(f"CRC-32 check: {'✓ Valid' if error_check_valid else '✗ Failed'} (RX=0x{rx_crc:08X}, Calc=0x{calculated_crc:08X})", "rx" if error_check_valid else "err")
+        
+        if not error_check_valid:
+            log("Error: Integrity check failed - data corrupted", "err")
+            STATS['err'] += 1
+            update_stats()
+            set_status("✗ TRANSMISSION FAILED: Integrity check failed")
+            return
+        
+        try:
+            final_msg = decoded_data.decode('utf-8')
+            log(f"✓ Success: '{final_msg}' delivered correctly", "rx")
+            
+            # Add success class to all nodes with celebration effect
+            for i, node_id in enumerate(["n-app", "n-enc", "n-mod", "n-chan", "n-dem", "n-dec"]):
+                node = document.getElementById(node_id)
+                if node:
+                    node.classList.remove("active")
+                    node.classList.remove("processing")
+                    node.classList.add("success")
+                
+                # Create celebration particles at each node
+                progress = 10 + (i * 18)  # Distribute across pipeline
+                create_particles(progress, count=12, color="#10b981")
+            
+            
+            set_status(f"✓ TRANSMISSION SUCCESSFUL: '{final_msg}'")
+            
+            STATS['recv'] += 1
+            update_stats()
+            
+            log("=== TRANSMISSION COMPLETE ===", "rx")
+            
+        except Exception as decode_err:
+            log(f"Error: UTF-8 decoding failed - {str(decode_err)}", "err")
+            STATS['err'] += 1
+            update_stats()
+            set_status("✗ TRANSMISSION FAILED: Decoding error")
+        
+    except Exception as e:
+        log(f"Critical Error: {str(e)}", "err")
+        set_status(f"✗ TRANSMISSION FAILED: {str(e)}")
+        console.error(str(e))
+    finally:
+        if start_btn:
+            start_btn.disabled = False
+            start_btn.innerHTML = '<i class="fas fa-play"></i> START TRANSMISSION'
+
+# Initialize UI
+def init_ui():
+    snr_slider = document.getElementById("snr")
+    snr_value = document.getElementById("snr-val")
+    
+    if snr_slider and snr_value:
+        def update_snr_display(e=None):
+            snr_value.textContent = snr_slider.value
+        
+        update_snr_proxy = create_proxy(update_snr_display)
+        snr_slider.addEventListener("input", update_snr_proxy)
+        update_snr_display()
+    
+    start_btn = document.getElementById("start-btn")
+    
+    if start_btn:
+        def on_click(e):
+            asyncio.ensure_future(start_transmission(e))
+            
+        on_click_proxy = create_proxy(on_click)
+        start_btn.addEventListener("click", on_click_proxy)
+    
+    log("✓ NumPy loaded successfully", "rx")
+    log("✓ System initialized (PyScript 2024.8.2)", "rx")
+    log("Ready for transmission", "rx")
+
+# Run initialization
+try:
+    init_ui()
+except Exception as e:
+    console.error(f"Initialization Failed: {e}")
+    log(f"Initialization Error: {e}", "err")
+    </script>
+
+</body>
+
+</html>
