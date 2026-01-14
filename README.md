@@ -55,7 +55,7 @@ This web-based simulator demonstrates the complete digital communication pipelin
 
 2. Navigate to the project folder:
    ```bash
-   cd p2p-digital-comm-simulator
+   cd p2p
    ```
 
 3. Open `index.html` in your browser, or serve with a local server:
@@ -72,7 +72,7 @@ This web-based simulator demonstrates the complete digital communication pipelin
 ## 📁 Project Structure
 
 ```
-p2p-digital-comm-simulator/
+p2p/
 ├── index.html          # Main application file
 ├── images/             # Node illustration images
 │   ├── app.png         # Application layer icon
@@ -136,6 +136,7 @@ Contributions are welcome! Feel free to:
 Made with ❤️ for educational purposes
 
 </div>
+
 
 
 
