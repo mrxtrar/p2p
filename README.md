@@ -50,7 +50,7 @@ This web-based simulator demonstrates the complete digital communication pipelin
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/p2p-digital-comm-simulator.git
+   git clone https://github.com/mrxtrar/p2p-digital-comm-simulator.git
    ```
 
 2. Navigate to the project folder:
@@ -136,6 +136,7 @@ Contributions are welcome! Feel free to:
 Made with ❤️ for educational purposes
 
 </div>
+
 
 
 
