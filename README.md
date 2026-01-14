@@ -14,7 +14,7 @@
 
 --- 
 ## Visit 👇
-👉  [![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Now-brightgreen?style=for-the-badge&logo=github)](https://mrxtrar.github.io/p2p)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Now-brightgreen?style=for-the-badge&logo=github)](https://mrxtrar.github.io/p2p)
 
 ## 🎯 Overview
 
@@ -137,6 +137,7 @@ Contributions are welcome! Feel free to:
 Made with ❤️ for educational purposes
 
 </div>
+
 
 
 
