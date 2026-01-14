@@ -3,7 +3,6 @@
 <div align="center">
 
 ![Version](https://img.shields.io/badge/version-1.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Python](https://img.shields.io/badge/PyScript-2024.8.2-yellow.svg)
 
 **A visual, interactive simulator for understanding digital communication pipelines**
@@ -137,6 +136,7 @@ Contributions are welcome! Feel free to:
 Made with ❤️ for educational purposes
 
 </div>
+
 
 
 
