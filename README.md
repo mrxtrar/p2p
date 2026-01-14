@@ -122,13 +122,9 @@ Contributions are welcome! Feel free to:
 - Suggest features
 - Submit pull requests
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👨‍💻 Author
 
-**Your Name**
 - B.Sc Computer Science, Semester V
 - Project Year: 2026
 
@@ -139,3 +135,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Made with ❤️ for educational purposes
 
 </div>
+
