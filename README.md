@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-1.1-blue.svg)
+![Version](https://img.shields.io/badge/version-2.0-blue.svg)
 ![Python](https://img.shields.io/badge/PyScript-2024.8.2-yellow.svg)
 
 **A visual, interactive simulator for understanding digital communication pipelines**
@@ -22,7 +22,8 @@ This web-based simulator demonstrates the complete digital communication pipelin
 ## ✨ Features
 
 - **Real-time Visualization** - Watch data flow through the communication pipeline
-- **File Transfer Simulation** - Transmit files up to 500KB through the communication pipeline
+- **File Transfer Simulation** - Transmit files up to 500KB through the pipeline
+- **Statistics Dashboard** - Track BER, ACK/NAK, success rate, and bit graphs
 - **Multiple Modulation Schemes** - BPSK, QPSK, 16-QAM, 64-QAM, 256-QAM, 1024-QAM
 - **Error Detection** - CRC-16, CRC-32, and Parity Bit implementations
 - **Noise Simulation** - Adjustable SNR (Signal-to-Noise Ratio) with AWGN channel
@@ -116,6 +117,22 @@ p2p/
 
 ### SNR Range
 Adjustable from 0 dB to 50 dB. Lower SNR = more noise = higher error probability.
+
+## 📊 Statistics Dashboard
+
+The simulator includes a real-time statistics panel that tracks:
+
+| Metric | Description |
+|--------|-------------|
+| **BER** | Bit Error Rate - percentage of corrupted bits |
+| **Success Rate** | Percentage of successful transmissions |
+| **ACK** | Acknowledgment count (successful transmissions) |
+| **NAK** | Negative acknowledgment count (failed transmissions) |
+| **Bar Graphs** | Visual representation of bits sent, received, and errored |
+
+- Collapsible panel - click to expand/collapse
+- Reset button to clear all statistics
+- Color-coded metrics (green = good, orange = warning, red = error)
 
 ## 🤝 Contributing
 
