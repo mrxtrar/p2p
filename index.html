@@ -771,6 +771,197 @@
         .btn-start:active {
             transform: scale(0.98);
         }
+
+        /* Statistics Dashboard */
+        .stats-dashboard {
+            margin-top: 15px;
+            background: rgba(10, 14, 23, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .stats-header {
+            padding: 12px 15px;
+            background: rgba(59, 130, 246, 0.1);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary);
+            transition: background 0.3s ease;
+        }
+
+        .stats-header:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .stats-header i {
+            transition: transform 0.3s ease;
+        }
+
+        .stats-header.collapsed i {
+            transform: rotate(-90deg);
+        }
+
+        .stats-content {
+            padding: 15px;
+            max-height: 400px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .stats-content.collapsed {
+            max-height: 0;
+            padding: 0 15px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-card.ack {
+            border-left: 3px solid var(--success);
+        }
+
+        .stat-card.nak {
+            border-left: 3px solid var(--error);
+        }
+
+        .stat-card .stat-icon {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .stat-icon.ack-icon {
+            color: var(--success);
+        }
+
+        .stat-card .stat-icon.nak-icon {
+            color: var(--error);
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-big {
+            font-size: 1.4rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+        }
+
+        .stat-big.success {
+            color: var(--success);
+        }
+
+        .stat-big.error {
+            color: var(--error);
+        }
+
+        /* Bits Bar Graph */
+        .bits-graph {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .graph-row {
+            margin-bottom: 10px;
+        }
+
+        .graph-label {
+            font-size: 0.6rem;
+            color: #64748b;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .graph-label span {
+            font-family: 'JetBrains Mono', monospace;
+            color: #94a3b8;
+        }
+
+        .bar-container {
+            height: 16px;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.5s ease;
+            min-width: 0;
+            position: relative;
+        }
+
+        .bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .bar-sent {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            width: 0%;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .bar-recv {
+            background: linear-gradient(90deg, #10b981, #4ade80);
+            width: 0%;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .bar-err {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+            width: 0%;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .reset-stats-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(100, 116, 139, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: #94a3b8;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .reset-stats-btn:hover {
+            background: rgba(100, 116, 139, 0.4);
+            color: white;
+        }
     </style>
 </head>
 
@@ -943,6 +1134,77 @@
                     <div style="font-size: 0.7rem; color: #94a3b8;">ERRORS</div>
                 </div>
             </div>
+
+            <!-- Enhanced Statistics Dashboard -->
+            <div class="stats-dashboard" id="stats-dashboard">
+                <div class="stats-header" id="stats-header">
+                    <span>📊 DETAILED STATISTICS</span>
+                    <i class="fas fa-chevron-down" id="stats-toggle"></i>
+                </div>
+
+                <div class="stats-content" id="stats-content">
+                    <!-- BER and Success Rate -->
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-label">BIT ERROR RATE</div>
+                            <div class="stat-big" id="s-ber">0.00%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">SUCCESS RATE</div>
+                            <div class="stat-big success" id="s-success">100%</div>
+                        </div>
+                    </div>
+
+                    <!-- ACK/NAK Counters -->
+                    <div class="stats-row">
+                        <div class="stat-card ack">
+                            <div class="stat-icon ack-icon">✓</div>
+                            <div class="stat-value" id="s-ack" style="color: var(--success);">0</div>
+                            <div class="stat-label">ACK</div>
+                        </div>
+                        <div class="stat-card nak">
+                            <div class="stat-icon nak-icon">✗</div>
+                            <div class="stat-value" id="s-nak" style="color: var(--error);">0</div>
+                            <div class="stat-label">NAK</div>
+                        </div>
+                    </div>
+
+                    <!-- Bits Bar Graph -->
+                    <div class="bits-graph">
+                        <div class="graph-row">
+                            <div class="graph-label">
+                                BITS TRANSMITTED
+                                <span id="bits-sent-label">0</span>
+                            </div>
+                            <div class="bar-container">
+                                <div class="bar bar-sent" id="bar-sent"></div>
+                            </div>
+                        </div>
+                        <div class="graph-row">
+                            <div class="graph-label">
+                                BITS RECEIVED OK
+                                <span id="bits-recv-label">0</span>
+                            </div>
+                            <div class="bar-container">
+                                <div class="bar bar-recv" id="bar-recv"></div>
+                            </div>
+                        </div>
+                        <div class="graph-row">
+                            <div class="graph-label">
+                                BITS ERRORED
+                                <span id="bits-err-label">0</span>
+                            </div>
+                            <div class="bar-container">
+                                <div class="bar bar-err" id="bar-err"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="reset-stats-btn" id="reset-stats-btn">
+                        <i class="fas fa-redo"></i> Reset Statistics
+                    </button>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -961,6 +1223,13 @@ STATS = {
     'sent': 0,
     'recv': 0,
     'err': 0,
+    'ack': 0,
+    'nak': 0,
+    'bits_sent': 0,
+    'bits_recv': 0,
+    'bits_err': 0,
+    'ber': 0.0,
+    'success_rate': 100.0,
     'window_size': 4,
     'sequence_number': 0
 }
@@ -997,6 +1266,7 @@ def set_status(msg):
         elm.innerText = msg
 
 def update_stats():
+    # Update basic counters
     elm_sent = document.getElementById("s-sent")
     elm_recv = document.getElementById("s-recv")
     elm_err = document.getElementById("s-err")
@@ -1004,6 +1274,84 @@ def update_stats():
     if elm_sent: elm_sent.innerText = str(STATS['sent'])
     if elm_recv: elm_recv.innerText = str(STATS['recv'])
     if elm_err: elm_err.innerText = str(STATS['err'])
+    
+    # Update ACK/NAK counters
+    elm_ack = document.getElementById("s-ack")
+    elm_nak = document.getElementById("s-nak")
+    if elm_ack: elm_ack.innerText = str(STATS['ack'])
+    if elm_nak: elm_nak.innerText = str(STATS['nak'])
+    
+    # Calculate and update BER
+    if STATS['bits_sent'] > 0:
+        STATS['ber'] = (STATS['bits_err'] / STATS['bits_sent']) * 100
+    else:
+        STATS['ber'] = 0.0
+    
+    elm_ber = document.getElementById("s-ber")
+    if elm_ber:
+        if STATS['ber'] < 0.01:
+            elm_ber.innerText = f"{STATS['ber']:.2f}%"
+        else:
+            elm_ber.innerText = f"{STATS['ber']:.2f}%"
+        # Color based on BER level
+        if STATS['ber'] > 10:
+            elm_ber.className = "stat-big error"
+        elif STATS['ber'] > 1:
+            elm_ber.className = "stat-big"
+        else:
+            elm_ber.className = "stat-big success"
+    
+    # Calculate and update success rate
+    total_transmissions = STATS['sent']
+    if total_transmissions > 0:
+        STATS['success_rate'] = (STATS['recv'] / total_transmissions) * 100
+    else:
+        STATS['success_rate'] = 100.0
+    
+    elm_success = document.getElementById("s-success")
+    if elm_success:
+        elm_success.innerText = f"{STATS['success_rate']:.0f}%"
+        if STATS['success_rate'] < 50:
+            elm_success.className = "stat-big error"
+        elif STATS['success_rate'] < 80:
+            elm_success.className = "stat-big"
+        else:
+            elm_success.className = "stat-big success"
+    
+    # Update bit labels
+    bits_sent_label = document.getElementById("bits-sent-label")
+    bits_recv_label = document.getElementById("bits-recv-label")
+    bits_err_label = document.getElementById("bits-err-label")
+    
+    if bits_sent_label: bits_sent_label.innerText = str(STATS['bits_sent'])
+    if bits_recv_label: bits_recv_label.innerText = str(STATS['bits_recv'])
+    if bits_err_label: bits_err_label.innerText = str(STATS['bits_err'])
+    
+    # Update bar graph widths
+    max_bits = max(STATS['bits_sent'], 1)
+    bar_sent = document.getElementById("bar-sent")
+    bar_recv = document.getElementById("bar-recv")
+    bar_err = document.getElementById("bar-err")
+    
+    if bar_sent: bar_sent.style.width = "100%"
+    if bar_recv: bar_recv.style.width = f"{min((STATS['bits_recv'] / max_bits) * 100, 100):.1f}%"
+    if bar_err: bar_err.style.width = f"{min((STATS['bits_err'] / max_bits) * 100, 100):.1f}%"
+
+def reset_all_stats():
+    """Reset all statistics to initial values"""
+    global STATS
+    STATS['sent'] = 0
+    STATS['recv'] = 0
+    STATS['err'] = 0
+    STATS['ack'] = 0
+    STATS['nak'] = 0
+    STATS['bits_sent'] = 0
+    STATS['bits_recv'] = 0
+    STATS['bits_err'] = 0
+    STATS['ber'] = 0.0
+    STATS['success_rate'] = 100.0
+    update_stats()
+    log("Statistics reset", "rx")
 
 def reset_nodes():
     for node_id in ["n-app", "n-enc", "n-mod", "n-chan", "n-dem", "n-dec"]:
@@ -1410,6 +1758,7 @@ async def start_transmission(e=None):
         set_status(f"5. Adding noise (SNR={snr}dB)")
         
         STATS['sent'] += 1
+        STATS['bits_sent'] += original_bit_length
         update_stats()
         
         channel = Channel()
@@ -1431,7 +1780,14 @@ async def start_transmission(e=None):
                 byte_val = sum(int(bit) << (7-j) for j, bit in enumerate(byte_bits))
                 rx_bytes.append(byte_val)
         
-        log(f"Demodulated {len(rx_bytes)} bytes", "rx")
+        # Count bit errors by comparing transmitted vs received bits
+        bit_errors = 0
+        for i in range(min(len(bits), len(demod_bits))):
+            if bits[i] != demod_bits[i]:
+                bit_errors += 1
+        STATS['bits_err'] += bit_errors
+        
+        log(f"Demodulated {len(rx_bytes)} bytes (bit errors: {bit_errors})", "rx")
         await asyncio.sleep(0.4)
         
         # Step 7: Decoding
@@ -1443,8 +1799,9 @@ async def start_transmission(e=None):
         if deframed is None:
             log("Error: Framing error - could not deframe data", "err")
             STATS['err'] += 1
+            STATS['nak'] += 1
             update_stats()
-            set_status("✗ TRANSMISSION FAILED: Framing error")
+            set_status("✗ TRANSMISSION FAILED: Framing error (NAK sent)")
             return
         
         error_check_valid = False
@@ -1478,8 +1835,9 @@ async def start_transmission(e=None):
         if not error_check_valid:
             log("Error: Integrity check failed - data corrupted", "err")
             STATS['err'] += 1
+            STATS['nak'] += 1
             update_stats()
-            set_status("✗ TRANSMISSION FAILED: Integrity check failed")
+            set_status("✗ TRANSMISSION FAILED: Integrity check failed (NAK sent)")
             return
         
         try:
@@ -1510,6 +1868,8 @@ async def start_transmission(e=None):
             set_status(f"✓ TRANSMISSION SUCCESSFUL: {success_msg}")
             
             STATS['recv'] += 1
+            STATS['ack'] += 1
+            STATS['bits_recv'] += original_bit_length - bit_errors
             update_stats()
             
             log("=== TRANSMISSION COMPLETE ===", "rx")
@@ -1517,8 +1877,9 @@ async def start_transmission(e=None):
         except Exception as decode_err:
             log(f"Error: UTF-8 decoding failed - {str(decode_err)}", "err")
             STATS['err'] += 1
+            STATS['nak'] += 1
             update_stats()
-            set_status("✗ TRANSMISSION FAILED: Decoding error")
+            set_status("✗ TRANSMISSION FAILED: Decoding error (NAK sent)")
         
     except Exception as e:
         log(f"Critical Error: {str(e)}", "err")
@@ -1672,6 +2033,29 @@ def init_ui():
         file_drop_zone.addEventListener("dragover", drag_over_proxy)
         file_drop_zone.addEventListener("dragleave", drag_leave_proxy)
         file_drop_zone.addEventListener("drop", drop_proxy)
+    
+    # Statistics dashboard handlers
+    stats_header = document.getElementById("stats-header")
+    stats_content = document.getElementById("stats-content")
+    stats_toggle = document.getElementById("stats-toggle")
+    
+    if stats_header and stats_content:
+        def toggle_stats(e=None):
+            stats_header.classList.toggle("collapsed")
+            stats_content.classList.toggle("collapsed")
+        
+        toggle_stats_proxy = create_proxy(toggle_stats)
+        stats_header.addEventListener("click", toggle_stats_proxy)
+    
+    # Reset statistics button
+    reset_stats_btn = document.getElementById("reset-stats-btn")
+    if reset_stats_btn:
+        def on_reset_stats(e=None):
+            e.stopPropagation()  # Prevent triggering parent click
+            reset_all_stats()
+        
+        reset_stats_proxy = create_proxy(on_reset_stats)
+        reset_stats_btn.addEventListener("click", reset_stats_proxy)
 
 # Run initialization
 try:
