@@ -1541,17 +1541,18 @@ class LengthFramer:
     def frame(self, data):
         length = len(data)
         framed = bytearray()
-        framed.extend(struct.pack('>H', length))
+        # Use 4-byte unsigned int ('>I') to support files up to 500KB
+        framed.extend(struct.pack('>I', length))
         framed.extend(data)
         return bytes(framed)
     
     def deframe(self, framed_data):
-        if len(framed_data) < 2:
+        if len(framed_data) < 4:
             return None
-        length = struct.unpack('>H', framed_data[:2])[0]
-        if len(framed_data) < 2 + length:
+        length = struct.unpack('>I', framed_data[:4])[0]
+        if len(framed_data) < 4 + length:
             return None
-        return framed_data[2:2 + length]
+        return framed_data[4:4 + length]
 
 # Modulator
 class Modulator:
